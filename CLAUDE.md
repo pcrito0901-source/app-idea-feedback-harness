@@ -143,6 +143,14 @@ User → Intake ──────┼→ @growth-strategist ─────┼�
 - Chair は `NEXT ACTION` を **最大3つ・具体的な行動** で出す
 - Chair のみが `docs/` を更新する
 
+**出力は2部構成にする。順序を入れ替えてはならない。**
+
+1. **判定サマリー** — ユーザーが読む部分。**30秒で読み終わる長さ。ハーネス用語（L0 / CRITICAL / Evidence Cap / Agent名）を使わない**
+2. **詳細** — 記録として残す部分。表・裁定・スコアの内訳
+
+**分析の過程を先に読ませてはならない。** ユーザーは「で、明日何をすればいいのか」を知るために読んでいる。
+第1部だけを読んだ人が「①作っていいのか ②明日何をするのか ③どうなったら次に進めるのか ④なぜ今それなのか」の4つに答えられなければ、Chair は書き直す。
+
 ### Phase 5: Validation Experiment
 
 `DECISION` が `VALIDATE` の場合、Chair は実験を設計して `docs/experiments.md` に `Status: PLANNED` で記録する。
