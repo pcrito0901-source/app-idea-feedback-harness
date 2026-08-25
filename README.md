@@ -121,15 +121,53 @@ Opportunity Scout は、現在の案の改善だけでなく、**「元の案よ
 
 ## 4. 導入方法
 
-Claude Code が使える環境があれば、それだけで動きます。追加のツールは不要です。
+Claude Code が使える環境があれば、それだけで動きます。追加のツールもセットアップ作業も不要です。
 
-### パターンA: このリポジトリをそのまま使う
+### ⚠️ 最初に: AIに「再現」させないでください
+
+このリポジトリのURLをAIに渡して **「これと同じハーネスを作って」と頼まないでください。**
+必ず `git clone` してください。理由は、このハーネスの中身がREADMEに書かれていないからです。
+
+| ファイル | 行数 | READMEに載っているか |
+|---|---|---|
+| `.claude/agents/` 8体 | 約1,800行 | ❌ 概要だけ |
+| `CLAUDE.md` | 約380行 | ❌ 概要だけ |
+| `README.md`（この文書） | 約420行 | — |
+
+つまり、**ハーネスの実体である約2,200行のうち、READMEに書かれているのはごく一部です。**
+
+READMEに載っていない具体的なルールが、このハーネスの動作を決めています。例えば:
+
+- Evidence Cap の具体的な数値（L0なら配点の40%まで、など）
+- 「ADDの採用は1ラウンド最大1つ」「ADDを採用するならREMOVEも必須」という純増禁止
+- 「KILLはL2以上の証拠がある場合のみ」という誤爆防止
+- Criticの反証7手順、各Agentの出力フォーマット、8体の責務境界
+
+READMEから再構築させると、**見た目は同じで歯止めだけが抜けた別物** ができあがります。
+そして失われるのは、まさに「アイデアを褒めない」「機能を増やさない」という **このハーネスの存在理由そのもの** です。
+
+### パターンA: アプリ案ごとに clone する（推奨）
+
+アプリ案1つにつき、フォルダを1つ作ってください。`docs/` の記録が案ごとに独立します。
 
 ```bash
-git clone https://github.com/YOUR_NAME/app-idea-feedback-harness.git
-cd app-idea-feedback-harness
-claude
+git clone https://github.com/pcrito0901-source/app-idea-feedback-harness.git my-app-idea
 ```
+
+```bash
+cd my-app-idea && rm -rf .git && claude
+```
+
+`rm -rf .git` は、このリポジトリの履歴を切り離して「自分の案専用のフォルダ」にするためです。
+案の変遷を自分でGit管理したい場合は、そのあと `git init` してください。
+
+あとは Claude Code に一言書くだけです。
+
+```
+AIを使った習慣管理アプリを考えている
+```
+
+`CLAUDE.md` は起動時に自動で読み込まれ、`.claude/agents/` の8体もプロジェクトのサブエージェントとして自動認識されます。
 
 ### パターンB: 自分のプロジェクトにコピーする
 
@@ -139,9 +177,17 @@ cp CLAUDE.md /path/to/your-project/CLAUDE.md
 cp -r docs/ /path/to/your-project/docs/
 ```
 
-`.claude/agents/` の8ファイルと `CLAUDE.md`、`docs/` が揃っていれば動きます。
+AIに手伝ってもらう場合は、**「参考にして作って」ではなく「コピーして」** と伝えてください。
 
-> アプリ案ごとにフォルダを分けることを推奨します。`docs/` の内容が案ごとに独立するためです。
+```
+https://github.com/pcrito0901-source/app-idea-feedback-harness を clone して、
+.claude/agents/ と CLAUDE.md と docs/ をこのプロジェクトにコピーして
+```
+
+### 動作条件
+
+`.claude/agents/` の **8ファイル** と `CLAUDE.md`、`docs/` が揃っていれば動きます。
+1つでも欠けると、そのAgentの視点が丸ごと失われます。
 
 ## 5. 新しいアプリ案をどう入力するか
 
