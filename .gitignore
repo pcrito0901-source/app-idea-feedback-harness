@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Claude Code (ローカル設定・認証情報を含むため)
+.claude/settings.local.json
+
+# 環境変数
+.env
+.env.local
+
+# 依存関係（このハーネスを既存プロジェクトにコピーした場合）
+node_modules/
+
+# ログ
+*.log
