@@ -1,17 +1,23 @@
 # App Idea Feedback Harness
 
-**「そのアプリ、本当に作るべきか」を7体のAI Agentで検証し、アプリ案そのものを改善するための Claude Code ハーネス。**
+**「そのアプリ、本当に作るべきか」を8体のAI Agentで検証し、アプリ案そのものを改善するための Claude Code ハーネス。**
 
 ```
                     ┌→ Customer Researcher ──┐
                     │                         │
                     ├→ Product Strategist ────┤
                     │                         │
-User → Intake ──────┼→ Growth Strategist ─────┼→ Critic → Idea Chair
-                    │     （並列・独立）        │              │
-                    ├→ Business Strategist ───┤              ↓
-                    │                         │      BUILD / ITERATE /
-                    └→ Technical Analyst ─────┘      VALIDATE / PIVOT / KILL
+User → Intake ──────┼→ Growth Strategist ─────┼→ Opportunity Scout
+                    │     （並列・独立）        │           ↓
+                    ├→ Business Strategist ───┤        Critic
+                    │                         │           ↓
+                    └→ Technical Analyst ─────┘      Idea Chair
+                                                         ↓
+                                            KEEP / ADD / CHANGE /
+                                            REMOVE / REPLACE / PIVOT
+                                                         ↓
+                                              BUILD / ITERATE /
+                                              VALIDATE / PIVOT / KILL
 ```
 
 ---
@@ -21,10 +27,11 @@ User → Intake ──────┼→ Growth Strategist ─────┼→
 あなたが「こういうアプリを作ろうと思っている」と一言入力すると、
 
 1. **5体の専門Agent** が、それぞれ別の視点から **独立して** 分析する
-2. **Critic（批判担当）** が、その5つの分析を反証する
-3. **Idea Chair（議長）** が全部を統合して **意思決定する**
-4. 未検証の重要仮説があれば、**あなたが外の世界で実行する検証実験** を設計する
-5. あなたが検証結果を持ち帰って入力すると、それを反映して **次のラウンド** が回る
+2. **Opportunity Scout** が、5つの分析を読んだうえで「案の構造を変えたらどうか」を探索する
+3. **Critic（批判担当）** が、分析と Opportunity の両方を反証する
+4. **Idea Chair（議長）** が全部を統合して **意思決定する**
+5. 未検証の重要仮説があれば、**あなたが外の世界で実行する検証実験** を設計する
+6. あなたが検証結果を持ち帰って入力すると、それを反映して **次のラウンド** が回る
 
 これを繰り返して、アプリ案そのものを育てます。
 
@@ -69,13 +76,48 @@ KILL は失敗ではありません。**3ヶ月を節約できた成功です。
 | **@growth-strategist** | 最初の10人と100人をどこから連れてくるか | 「SNSを活用する」は禁止。**実在するコミュニティ名・キーワード** まで書く |
 | **@business-strategist** | 誰が、なぜ、いくら払うか | 「ユーザーが増えてから収益化」を前提にしない。AI APIの原価が単価を超えないかも検算する |
 | **@technical-analyst** | 1人で作れて、1人で運用し続けられるか | 「技術的には可能」で終わらない。**もっと小さく作る方法** を必ず提示する |
-| **@critic** | 上の5つを **反証する** | 失敗要因TOP3を出す。全員が一致していたら、それは合意ではなく「全員が疑わなかった前提」だと考える |
-| **@idea-chair** | 全部を統合して **決める** | 要約禁止。KEEP / CHANGE / REMOVE / VALIDATE / NEXT ACTION と、5つの判定から1つを必ず出す |
+| **@opportunity-scout** | 案の構造を変えたらどうか探索する | **機能を増やすAgentではない**。ADD / CHANGE / REMOVE / REPLACE / PIVOT の5方向から検討し、「追加不要」「削除すべき」も正常な結論 |
+| **@critic** | 上の分析と Opportunity を **反証する** | 失敗要因TOP3を出す。全員が一致していたら、それは合意ではなく「全員が疑わなかった前提」だと考える |
+| **@idea-chair** | 全部を統合して **決める** | 要約禁止。案レベルの KEEP / CHANGE / REMOVE と、機能レベルの FEATURE DECISIONS、そして5つの判定から1つを必ず出す |
 
 ### なぜ5体を「独立して」動かすのか
 
 先に他のAgentの意見を見せると、**全員が同じ結論に寄ってしまう** からです。
-5体は互いの分析を見ずに書き、揃ってから Critic に渡されます。
+5体は互いの分析を見ずに書き、揃ってから Opportunity Scout → Critic に渡されます。
+
+### Opportunity Scout は何が違うのか
+
+5体の専門Agentは、**現在の案を「正しいもの」として受け入れて**分析します。
+「このターゲットに、この問題を、このやり方で解く」という前提を動かしません。
+
+Opportunity Scout だけが、**その前提そのものを変数として扱います。**
+
+| | 専門Agentの問い | Opportunity Scout の問い |
+|---|---|---|
+| Product | この案のまま、どう良くするか | **構造を変えたら**どうか |
+| Growth | 今のプロダクトをどう届けるか | **プロダクト自体を変えて**流通を作れないか |
+| Business | 今の案は収益化できるか | **用途やターゲットを変えて**強い課金理由を作れないか |
+
+探索は必ず5方向すべてから行われます。
+
+| 方向 | 内容 |
+|---|---|
+| **ADD** | 追加する（指標が動く説明ができない追加は禁止） |
+| **CHANGE** | 入力方式・AIの役割・利用タイミング・対象ユーザーを変える |
+| **REMOVE** | 機能・複雑さ・**前提** を削除する |
+| **REPLACE** | 手動入力→自動取得、検索→推薦、記録→自動分析 など、摩擦の少ない方法に置き換える |
+| **PIVOT** | Target / Problem / Solution / Use Case / Monetization / Distribution / Positioning を変える |
+
+さらに3つの深さで検討されます。**Incremental**（小さく改善）/ **Adjacent**（別のターゲットや用途へ広げる）/ **Radical**（前提そのものを疑う）。
+
+そして重要な制約があります。
+
+- **毎回ADDを出す必要はありません。** 「現在の案は十分シンプルなので追加不要」も正常な出力です
+- **Chair が採用できる ADD は1ラウンドに最大1つ。** ADDを採用するなら、同時にREMOVEかREPLACEを1つ以上採用しなければなりません（**純増を認めない**）
+- **Radical / PIVOT の採用にはL2以上の証拠が必要。** 推測だけで案の根幹を作り変えることはできません
+
+Opportunity Scout は、現在の案の改善だけでなく、**「元の案より、こちらを作った方が強いのでは」という別のアプリ案** を発見することもあります。
+ただし `docs/research.md` の実際の証拠から導けるものに限られ、**1ラウンドに最大1つ** です。
 
 ## 4. 導入方法
 
@@ -97,7 +139,7 @@ cp CLAUDE.md /path/to/your-project/CLAUDE.md
 cp -r docs/ /path/to/your-project/docs/
 ```
 
-`.claude/agents/` の7ファイルと `CLAUDE.md`、`docs/` が揃っていれば動きます。
+`.claude/agents/` の8ファイルと `CLAUDE.md`、`docs/` が揃っていれば動きます。
 
 > アプリ案ごとにフォルダを分けることを推奨します。`docs/` の内容が案ごとに独立するためです。
 
@@ -141,7 +183,7 @@ NEXT ACTION
 ```
 アイデアを入力
     ↓
-Round 1（5体 → Critic → Chair）
+Round 1（5体 → Opportunity Scout → Critic → Chair）
     ↓
 Chair「重要仮説が未検証。VALIDATE です」
     ↓
@@ -153,16 +195,27 @@ Chair「重要仮説が未検証。VALIDATE です」
     ↓
 Round 2（Evidence を反映して再分析）
     ↓
-Idea v2 へ更新
+新しい Evidence から、前回は見えなかった Opportunity が見つかる
+    ↓
+Idea v2 へ更新（採用した変更が記録される）
     ↓
 （繰り返し）
 ```
+
+このループは「現在の案を採点し続ける」ためのものではありません。
+**証拠が増えるたびに、より良いプロダクトの形を探し直す** ためのものです。
 
 ### 重要なルール
 
 **Evidence が増えていないのに再分析しても、結論は変わりません。**
 このハーネスは、新しい材料なしに再分析を求められたら断り、未実行の実験を提示します。
 アイデアをこね続けるのではなく、**外に出て確かめる** ためのハーネスです。
+
+Opportunity Scout も同じ制約を受けます。新しい証拠がなければ、新しい機会も生まれません。
+
+**案が漂流しないための歯止め**もあります。
+Target / Core Problem / Core Action が3ラウンド連続で変わっている場合、探索は止まります。
+それは改善ではなく漂流だからです。最も証拠の強いバージョンに戻り、検証に集中します。
 
 ## 7. 検証結果をどう入力するか
 
@@ -213,7 +266,7 @@ Idea Chair は毎回、必ずこの5つから1つを選びます。
 | **BUILD** | 重要仮説が検証済み。作ってよい | 開発ハーネスへ移行（→9章） |
 | **ITERATE** | 問題は実在するが、案の形が弱い | ターゲットや範囲を修正して再分析 |
 | **VALIDATE** | まだ何も確認できていない | 実験を実行して証拠を取ってくる |
-| **PIVOT** | 前提は否定されたが、別の有望な問題が見つかった | 案を作り直す。ゼロには戻らない |
+| **PIVOT** | 前提が否定された、**または** Opportunity Scout が見つけた別の案の方が明らかに強い（要L2証拠） | 案を作り直す。ゼロには戻らない |
 | **KILL** | 前提が否定され、隣接する案もない | **やめる。これは正常な結論** |
 
 **初回はほぼ必ず VALIDATE になります。** 落ち込む必要はありません。
@@ -277,7 +330,8 @@ app-idea-feedback-harness/
 │   ├── growth-strategist.md       # どうやってユーザーを集めるか
 │   ├── business-strategist.md     # 誰が、なぜ、いくら払うか
 │   ├── technical-analyst.md       # 1人で作れて運用できるか
-│   ├── critic.md                  # 上の5つを反証する
+│   ├── opportunity-scout.md       # 案の構造を変える機会を探索する
+│   ├── critic.md                  # 上の分析とOpportunityを反証する
 │   └── idea-chair.md              # 統合して意思決定する
 │
 └── docs/

@@ -40,6 +40,9 @@
 
 ## MVP Scope
 
+> ここに並ぶ各項目が、`@opportunity-scout` の **Feature Review** の対象になり、
+> `@idea-chair` の **FEATURE DECISIONS**（KEEP / ADD / CHANGE / REMOVE / REPLACE）で更新される。
+
 作るもの:
 - [ ]
 - [ ]

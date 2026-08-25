@@ -23,6 +23,8 @@
 6. 案を改善するために機能を増やさない。機能追加は改善ではない
 7. 開発を開始すること自体を成功とみなさない
 8. 5つの専門 Agent が同じ結論に揃ったとき、それは合意ではない。**共通の未検証前提を疑う**
+9. **Opportunity Scout の提案を、Critic の検証を経ずに採用しない。** 新しい機会は新しいリスクでもある
+10. **毎ラウンド何かを追加しようとしない。** 「今回は変更なし」「削除のみ」も正常な結論
 
 ## Agent Roles
 
@@ -33,8 +35,13 @@
 | `@growth-strategist` | 最初の10人 / 100人をどこから連れてくるか | 問題定義・機能設計・価格設定・実装 |
 | `@business-strategist` | 誰が、なぜ、いくら払うか。事業として成立するか | 集客手段・機能設計・実装方法 |
 | `@technical-analyst` | 個人開発で作れて、運用し続けられるか | 需要・価格・集客の判断 |
-| `@critic` | 上記5つの分析を反証する。失敗要因TOP3を出す | 新しい案の提案（Chairの仕事） |
+| `@opportunity-scout` | **案の構造を変えたらどうか** を探索する。既存機能の要否も判断する | 案の採否の決定（Chairの仕事） |
+| `@critic` | 上記の分析と Opportunity を反証する。失敗要因TOP3を出す | 新しい案の提案 |
 | `@idea-chair` | 全情報を統合し **意思決定する**。ファイルを更新する | 分析のやり直し・実装 |
+
+**5つの専門 Agent と Opportunity Scout の違い**:
+専門 Agent は現在の案を **所与** として分析する（Core Problem / Target を動かさない）。
+Opportunity Scout はそれらを **変数** として扱い、構造ごと変える機会を探す。
 
 ## Execution Order
 
@@ -43,21 +50,30 @@
                     │                          │
                     ├→ @product-strategist ────┤
                     │                          │
-User → Intake ──────┼→ @growth-strategist ─────┼→ @critic → @idea-chair
-       (main)       │     （並列・独立）        │                │
-                    ├→ @business-strategist ───┤                ↓
-                    │                          │          Improved Idea
-                    └→ @technical-analyst ─────┘                │
-                                                                ↓
-                                                     Validation Experiment
-                                                                │
-                                                                ↓
-                                                     User executes（外部）
-                                                                │
-                                                                ↓
-                                                         Evidence added
-                                                                │
-                                                                └→ Next Loop
+User → Intake ──────┼→ @growth-strategist ─────┼→ @opportunity-scout
+       (main)       │     （並列・独立）        │           │
+                    ├→ @business-strategist ───┤           ↓
+                    │                          │       @critic
+                    └→ @technical-analyst ─────┘           │
+                                                           ↓
+                                                     @idea-chair
+                                                           │
+                                                           ↓
+                                    KEEP / ADD / CHANGE / REMOVE / REPLACE / PIVOT
+                                                           │
+                                                           ↓
+                                                    Improved Idea
+                                                           │
+                                                           ↓
+                                                Validation Experiment
+                                                           │
+                                                           ↓
+                                                User executes（外部）
+                                                           │
+                                                           ↓
+                                                    Evidence added
+                                                           │
+                                                           └→ Next Loop
 ```
 
 **この順序を飛ばしてはならない。**
@@ -98,29 +114,41 @@ User → Intake ──────┼→ @growth-strategist ─────┼�
 - **専門 Agent は `docs/` に書き込まない**（並列実行の書き込み競合を防ぐ）。書き込むのは Chair とメインスレッドのみ
 - 各 Agent は分析結果をメインスレッドに返す
 
-### Phase 2: Critic（5つ揃ってから）
+### Phase 2: Opportunity Discovery（5つ揃ってから）
 
-5つの分析が **すべて** 出揃ってから `@critic` に渡す。
+5つの分析が **すべて** 出揃ってから `@opportunity-scout` を起動する。
 
-- **サブエージェントは会話履歴を共有しない。** Critic を起動するプロンプトに、**5つの分析の全文と現在のアイデアを実際に貼り付ける**こと。「上の分析を見て」では Critic には何も見えていない
+- Scout は5つの分析を **すべて読む**。ここは独立フェーズではない
+- 起動プロンプトに **5つの分析の全文** を貼り付ける
+- Scout は `docs/` 全体と `docs/versions/` の過去バージョンも読み、**却下済み・失敗済みの方向を再提案しない**
+- Scout は `docs/` に書き込まない
+- **Scout は機能追加を義務づけられていない。** 「今回は採用に値する Opportunity は無い」も正常な出力
+- Scout の出力は **そのまま採用してはならない**。必ず Critic を通す
+
+### Phase 3: Critic（分析5つ + Opportunity が揃ってから）
+
+`@critic` に渡す。
+
+- **サブエージェントは会話履歴を共有しない。** Critic を起動するプロンプトに、**5つの分析と Opportunity Scout の出力の全文、現在のアイデアを実際に貼り付ける**こと。「上の分析を見て」では Critic には何も見えていない
 - Critic は同意することを目的にしない。反証を探す
+- Critic は **各 Opportunity を個別に検証し、REJECT できる**
 - **Critic の出力なしに Chair を起動してはならない**
 
-### Phase 3: Idea Chair
+### Phase 4: Idea Chair
 
-`@idea-chair` に、5つの分析 + Critic の反証を渡す。**これも全文を貼り付ける。**
+`@idea-chair` に、5つの分析 + Opportunity Scout の提案 + Critic の反証を渡す。**これも全文を貼り付ける。**
 
 - Chair は要約してはならない。**必ず意思決定する**
 - Chair は `DECISION` を `BUILD / ITERATE / VALIDATE / PIVOT / KILL` から必ず1つ選ぶ
 - Chair は `NEXT ACTION` を **最大3つ・具体的な行動** で出す
 - Chair のみが `docs/` を更新する
 
-### Phase 4: Validation Experiment
+### Phase 5: Validation Experiment
 
 `DECISION` が `VALIDATE` の場合、Chair は実験を設計して `docs/experiments.md` に `Status: PLANNED` で記録する。
 このハーネスは実験を代行しない。**実行するのはユーザー**。
 
-### Phase 5: Evidence Intake（メインスレッドが実行）
+### Phase 6: Evidence Intake（メインスレッドが実行）
 
 ユーザーが外部で得た結果（インタビュー、LP、レビュー調査など）を入力したら、分析を始める前に必ず次を行う。
 
@@ -134,14 +162,39 @@ User → Intake ──────┼→ @growth-strategist ─────┼�
 ## Feedback Loop
 
 ```
-Idea → Independent Analysis → Critic → Chair → Critical Assumptions
-  ↑                                                    │
-  │                                                    ↓
-Updated Idea ← Re-analysis ← Evidence ← Validation Experiment
+Current Idea
+    ↓
+Independent Specialist Analysis（5体・並列・独立）
+    ↓
+Opportunity Discovery（構造を変える機会を探索）
+    ↓
+Critic（分析と Opportunity の両方を反証）
+    ↓
+Idea Chair
+    ↓
+KEEP / ADD / CHANGE / REMOVE / REPLACE / PIVOT
+    ↓
+Updated Idea Version
+    ↓
+Critical Assumptions
+    ↓
+Validation Experiment
+    ↓
+Real-world Evidence（ユーザーが外部で取得）
+    ↓
+Re-analysis
+    ↓
+New Opportunities（Evidence が増えたので、前回見えなかった機会が見える）
+    ↓
+Next Idea Version
 ```
+
+このループは「現在の案を評価する」だけではない。
+**Evidence が増えるたびに、より良いプロダクト機会を探索し直す** ためのループである。
 
 1ラウンド = 1回の分析ではなく、**Evidence が1つ増えるごとに1ラウンド**。
 Evidence が増えていないのに再分析しても結論は変わらない（Stop Conditions 参照）。
+Opportunity Scout も同じ制約を受ける。**新しい Evidence がなければ、新しい Opportunity も生まれない。**
 
 ## Shared State
 
@@ -165,7 +218,8 @@ Evidence が増えていないのに再分析しても結論は変わらない�
 - 表現の微修正だけならバージョンを増やさない
 - `docs/decisions.md` は追記のみ。過去の判断を消さない。却下した案は「なぜ却下したか」まで書く（同じ案の蒸し返しを防ぐため）
 - `docs/experiments.md` は追記のみ。失敗した実験も消さない
-- 専門 Agent（Phase 1）は `docs/` に書き込まない
+- 専門 Agent（Phase 1）/ Opportunity Scout / Critic は `docs/` に書き込まない。書き込むのは Chair とメインスレッド（Evidence 取り込み時）のみ
+- `docs/decisions.md` には **却下した Opportunity とその理由** も記録する。同じ提案が毎ラウンド戻ってくるのを防ぐため
 
 ## Evidence Rules
 
@@ -227,7 +281,7 @@ Chair は必ず1つを選ぶ。**総合スコアだけで決めてはならな�
 | **BUILD** | すべての CRITICAL 仮説が L2 以上で SUPPORTED / 最初の10人が具体的に特定できている / 収益化仮説が L2 以上 / 未解決の Critical Risk なし / MVP が個人で 4〜8週間以内 / 総合70点以上 |
 | **ITERATE** | 問題の存在は L2 以上で確認できたが、案の形（ターゲット・範囲・価値提案）が弱い。案を修正して再分析する |
 | **VALIDATE** | CRITICAL 仮説が L0〜L1 のまま。**初回ラウンドはほぼこれになる**。実験を設計して外部検証へ |
-| **PIVOT** | CRITICAL 仮説が REFUTED だが、調査の過程で別の有望な問題・ターゲットが見つかっている。資産（ユーザー接点・知見）を引き継いで案を作り直す |
+| **PIVOT** | 次の **いずれか**。①CRITICAL 仮説が REFUTED だが、調査の過程で別の有望な問題・ターゲットが見つかっている。②現在の案は否定されていないが、Opportunity Scout の `Radical` Opportunity / New Idea Candidate を Critic が SUPPORT し、**L2 以上の Evidence** で明らかに強いと判断できる。いずれも資産（ユーザー接点・知見）を引き継いで案を作り直す |
 | **KILL** | CRITICAL 仮説が REFUTED で隣接する有望な案もない / 同じ CRITICAL 仮説の検証に2回連続で失敗 / Distribution または Monetization が構造的に成立しない |
 
 **Critical Risk の扱い**: ある項目の得点が配点の 40% 未満なら、それは Critical Risk。
@@ -242,6 +296,21 @@ Evidence が L0〜L1 の段階で案が弱く見える場合の正しい判定�
 **ラウンド番号**: `docs/scorecard.md` の「推移」表の最終行 + 1 が今回のラウンド番号。
 表が空なら今回が Round 1。Intake は Round 0 であり、ラウンドに数えない。
 
+## Opportunity Adoption Rules
+
+Opportunity Scout の提案を Chair が採用するときの制約。**機能膨張を防ぐための構造的な歯止め。**
+
+1. **Critic が REJECT した Opportunity は採用しない。** 採用する場合は、Critic の指摘に個別に反論を書く
+2. **1ラウンドで採用する `ADD` は最大1つ。** ゼロでもよい
+3. **`ADD` を採用する場合、同じラウンドで `REMOVE` または `REPLACE` を1つ以上採用する。** 純増を認めない
+4. `REMOVE` / `REPLACE` の採用数に上限はない。**削る方向には制限をかけない**
+5. **`Radical` レベルおよび `PIVOT` タイプの Opportunity の採用には、L2 以上の Evidence が必要。**
+   L0〜L1 の段階で案の根幹を作り変えると、検証されていない案を検証されていない別の案に取り替えるだけになる。
+   その場合の正しい扱いは「採用」ではなく「`VALIDATE` の対象にする」
+6. `Incremental` の採用は L0 でもよい（元に戻せるため）
+7. 採用・不採用を問わず、**すべての Opportunity を `docs/decisions.md` に記録する**（理由付き）
+8. **New Idea Candidate（別のアプリ案）の採用は `PIVOT` 判定と同義。** 5 のルールが適用され、L2 以上の Evidence が必要
+
 ## Stop Conditions
 
 無限にアイデアをこねさせないための停止条件。
@@ -251,6 +320,8 @@ Evidence が L0〜L1 の段階で案が弱く見える場合の正しい判定�
 3. **3ラウンド連続で総合スコアの上昇が +5 未満、かつ最高 Evidence Level が上がっていない場合**、ループを止め、`BUILD` か `KILL` の二択をユーザーに迫る
 4. **検証コストが開発コストを上回る場合**、検証せずに小さく作ることを提案してよい（実験は開発より安いときにだけ意味がある）
 5. **ユーザーが検証をスキップして作ると決めた場合、止めない**。ただし `docs/decisions.md` に「検証をスキップした」ことと未検証の CRITICAL 仮説を明記してから進む。最終決定権はユーザーにある
+6. **同じ Opportunity が2回 REJECT された場合、3回目を提案しない。** `docs/decisions.md` に記録し、Scout はそれを読んで再提案を避ける。復活させるには、却下後に得られた新しい Evidence の引用が必要
+7. **案の根幹（Target / Core Problem / Core Action）が3ラウンド連続で変わっている場合、探索を止める。** それは改善ではなく漂流である。最も Evidence の強いバージョンに戻し、`VALIDATE` に集中する
 
 ## Handoff to Development Harness
 

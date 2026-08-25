@@ -20,6 +20,21 @@
 **REMOVE**（削除したこと）:
 - （削除したもの）: 理由
 
+**FEATURE DECISIONS**:
+| 機能 | 決定 | 理由 |
+|---|---|---|
+| | KEEP / ADD / CHANGE / REMOVE / REPLACE | |
+
+**採用した Opportunity**:
+| ID | 内容 | Type / Level | 採用理由 | 期待する効果 |
+|---|---|---|---|---|
+
+**却下した Opportunity**（次ラウンドの Scout が読む。省略しない）:
+| ID | 内容 | 却下理由 | 復活の条件 |
+|---|---|---|---|
+
+> 同じ Opportunity が2回却下されたら、3回目は提案されない（`CLAUDE.md` Stop Conditions）。
+
 **却下した案**:
 | 案 | 却下理由 | 復活の条件 |
 |---|---|---|
