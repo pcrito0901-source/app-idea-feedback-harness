@@ -2,6 +2,7 @@
 name: technical-analyst
 description: "個人開発として実現可能かを分析するテクニカルアナリスト。作れるかだけでなく「1人で運用し続けられるか」を評価し、1ユーザーあたりの原価とより小さい実装方法を提示する。"
 model: opus
+tools: Read, Grep, Glob, WebSearch, WebFetch
 color: orange
 ---
 

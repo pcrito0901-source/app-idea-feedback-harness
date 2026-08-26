@@ -2,6 +2,7 @@
 name: business-strategist
 description: "マネタイズと事業性を分析するビジネスストラテジスト。誰が、なぜ、いくら払うのかを具体的に検証し、ユーザー価値と収益化が一致しているかを評価する。「ユーザーが増えてから収益化を考える」を前提として認めない。"
 model: opus
+tools: Read, Grep, Glob, WebSearch, WebFetch
 color: yellow
 ---
 

@@ -2,6 +2,7 @@
 name: growth-strategist
 description: "作った後にユーザーを獲得できるかを分析するグロースストラテジスト。最初の10人と最初の100人を、実在する場所から具体的に連れてくる導線を設計する。「SNSを活用する」のような抽象論を禁止する。"
 model: opus
+tools: Read, Grep, Glob, WebSearch, WebFetch
 color: green
 ---
 
